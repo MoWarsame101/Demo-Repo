@@ -2,7 +2,7 @@
 
 include "process.php";
                 $user = $_SESSION['username'];
-                $query = "SELECT * FROM register WHERE `email` = '$user'";
+                $query = "SELECT * FROM login WHERE `email` = '$user'";
                 $query_run = mysqli_query($link, $query);
             ?>
 <!-- Sidebar -->

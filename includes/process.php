@@ -2,7 +2,10 @@
 include_once "includes/db.php";
 include_once "includes/functions.php";
 include "timezone.php";
-require 'vendor/autoload.php';
+
+require "Mail/phpmailer/PHPMailerAutoload.php";
+// Include autoload.php file
+
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -197,130 +200,261 @@ if(isset($_POST['save_excel_data']))
 }
 
 
+//register user using an OTP
+
+if(isset($_POST["register"])){
+    $email = $_POST["email"];
+    $password = $_POST["password"];
+
+    $check_query = mysqli_query($link, "SELECT * FROM login where email ='$email'");
+    $rowCount = mysqli_num_rows($check_query);
+
+    if(!empty($email) && !empty($password)){
+        if($rowCount > 0){
+            ?>
+            <script>
+                alert("User with email already exist!");
+            </script>
+            <?php
+        }else{
+            $password_hash = password_hash($password, PASSWORD_BCRYPT);
+
+            $result = mysqli_query($link, "INSERT INTO login (email, password, status) VALUES ('$email', '$password_hash', 0)");
+
+            if($result){
+                $otp = rand(100000,999999);
+                $_SESSION['otp'] = $otp;
+                $_SESSION['mail'] = $email;
+                $mail = new PHPMailer;
+
+                $mail->isSMTP();
+                $mail->Host='smtp.gmail.com';
+                $mail->Port=587;
+                $mail->SMTPAuth=true;
+                $mail->SMTPSecure='tls';
+
+                $mail->Username='mowarzamedemo@gmail.com';
+                $mail->Password='nugzlfuyqhelyzwd';
+
+                $mail->setFrom('email account', 'OTP Verification');
+                $mail->addAddress($_POST["email"]);
+
+                $mail->isHTML(true);
+                $mail->Subject="Your verify code";
+                $mail->Body="<p>Dear user, </p> <h3>Your verify OTP code is $otp <br></h3>
+                <br><br>
+                <p>With regrads,</p>
+                <b>Programming with Lam</b>
+                https://www.youtube.com/channel/UCKRZp3mkvL1CBYKFIlxjDdg";
+
+                        if(!$mail->send()){
+                            ?>
+                                <script>
+                                    alert("<?php echo "Register Failed, Invalid Email "?>");
+                                </script>
+                            <?php
+                        }else{
+                            ?>
+                            <script>
+                                alert("<?php echo "Register Successfully, OTP sent to " . $email ?>");
+                                window.location.replace('verification.php');
+                            </script>
+                            <?php
+                        }
+            }
+        }
+    }
+}
+
+//Verify OTP
+if(isset($_POST["verify"])){
+    $otp = $_SESSION['otp'];
+    $email = $_SESSION['mail'];
+    $otp_code = $_POST['otp_code'];
+
+    if($otp != $otp_code){
+        ?>
+       <script>
+           alert("Invalid OTP code");
+       </script>
+       <?php
+    }else{
+        mysqli_query($link, "UPDATE login SET status = 1 WHERE email = '$email'");
+        ?>
+         <script>
+             alert("Verfiy account done, you may sign in now");
+               window.location.replace("index.php");
+         </script>
+         <?php
+    }
+
+}
 
 
-if(isset($_POST['register-btn'])){
-    $username = $_POST['username'];
-    $firstname = $_POST['fname'];
-    $lastname = $_POST['lname'];
-    $email = mysqli_real_escape_string($link, $_POST["email"]);  
-    $password = mysqli_real_escape_string($link, $_POST["password"]);
-    $repassword = mysqli_real_escape_string($link, $_POST["repassword"]);
-    $department = $_POST['departments'];
-    $usertype = $_POST['usertype'];
-    $role = $_POST['role'];
-    $passwordmd5 = md5($password);  
-    $repasswordmd5 = md5($repassword); 
-    $files = $_FILES['picture'];
-    $filename = $files['name'];
-    $filrerror = $files['error'];
-    $filetemp = $files['tmp_name'];
-    $fileext = explode('.', $filename);
-    $filecheck = strtolower(end($fileext));
-if($password === $repassword){
-    if($filecheck){
+//Recover Password
+if(isset($_POST["recover"])){
+    $email = $_POST["email"];
 
-        $destinationfile = '../img/'.$filename;
-        move_uploaded_file($filetemp, $destinationfile);
-    
-    $sql = "INSERT INTO `register` (`username`,`fname`,`lname`,`departments`,`email`,`password`,`repassword`,`usertype`,`pic`,`role`) 
-    VALUES ('$username','$firstname','$lastname', '$department', '$email','$passwordmd5', '$repasswordmd5','$usertype','$destinationfile','$role')";
-    $query = mysqli_query($link, $sql);
-    $_SESSION['added'] = "added successfully";
-    header("location: myprofile.php");
+    $sql = mysqli_query($link, "SELECT * FROM login WHERE email='$email'");
+    $query = mysqli_num_rows($sql);
+      $fetch = mysqli_fetch_assoc($sql);
 
+    if(mysqli_num_rows($sql) <= 0){
+        ?>
+        <script>
+            alert("<?php  echo "Sorry, no emails exists "?>");
+        </script>
+        <?php
+    }else if($fetch["status"] == 0){
+        ?>
+           <script>
+               alert("Sorry, your account must verify first, before you recover your password !");
+               window.location.replace("login.php");
+           </script>
+       <?php
+    }else{
+        // generate token by binaryhexa 
+        $token = bin2hex(random_bytes(50));
+
+        //session_start ();
+        $_SESSION['token'] = $token;
+        $_SESSION['email'] = $email;
+
+        $mail = new PHPMailer;
+
+        $mail->isSMTP();
+        $mail->Host='smtp.gmail.com';
+        $mail->Port=587;
+        $mail->SMTPAuth=true;
+        $mail->SMTPSecure='tls';
+
+        // h-hotel account
+        $mail->Username='mowarzamedemo@gmail.com';
+        $mail->Password='nugzlfuyqhelyzwd';
+
+        // send by h-hotel email
+        $mail->setFrom('email', 'Password Reset');
+        // get email from input
+        $mail->addAddress($_POST["email"]);
+        //$mail->addReplyTo('lamkaizhe16@gmail.com');
+
+        // HTML body
+        $mail->isHTML(true);
+        $mail->Subject="Recover your password";
+        $mail->Body="<b>Dear User</b>
+        <h3>We received a request to reset your password.</h3>
+        <p>Kindly click the below link to reset your password</p>
+        http://localhost/demoapp/reset_psw.php
+        <br><br>
+        <p>With regrads,</p>
+        <b>Programming with Lam</b>";
+
+        if(!$mail->send()){
+            ?>
+                <script>
+                    alert("<?php echo " Invalid Email "?>");
+                </script>
+            <?php
+        }else{
+            ?>
+                <script>
+                    window.location.replace("notification.php");
+                </script>
+            <?php
+        }
+    }
 }
-else{
-    $sql2 = "INSERT INTO `register` (`username`,`fname`,`lname`,`departments`,`email`,`password`,`repassword`,`usertype`,`pic`,`role`) 
-    VALUES ('$username','$firstname','$lastname', '$department', '$email','$passwordmd5', '$repasswordmd5','$usertype','../img/no.jpg','$role')";
-    $query2 = mysqli_query($link, $sql2);
-    $_SESSION['added'] = "added successfully";
-    header("location: myprofile.php");
+
+
+
+
+
+//Reset Password
+if(isset($_POST["reset"])){
+    $psw = $_POST["password"];
+
+    $token = $_SESSION['token'];
+    $Email = $_SESSION['email'];
+
+    $hash = password_hash( $psw , PASSWORD_DEFAULT );
+
+    $sql = mysqli_query($link, "SELECT * FROM login WHERE email='$Email'");
+    $query = mysqli_num_rows($sql);
+      $fetch = mysqli_fetch_assoc($sql);
+
+    if($Email){
+        $new_pass = $hash;
+        mysqli_query($link, "UPDATE login SET password='$new_pass' WHERE email='$Email'");
+        ?>
+        <script>
+            window.location.replace("login.php");
+            alert("<?php echo "your password has been succesful reset"?>");
+        </script>
+        <?php
+    }else{
+        ?>
+        <script>
+            alert("<?php echo "Please try again"?>");
+        </script>
+        <?php
+    }
 }
-}
-else{
-    $_SESSION['added'] = "Password and confirm password doesn't match";
-    header("location: myprofile.php");
-}
-}
+
 
 
 //login 
-if(isset($_POST['login_btn']))
-{
-    $email_login =  mysqli_real_escape_string($link, $_POST["emaill"]);  
-    $password_login = mysqli_real_escape_string($link, $_POST["passwordd"]);
-    $passwordmd5 = md5($password_login);  
-    $query = "SELECT * FROM register WHERE email='$email_login' AND password='$passwordmd5' LIMIT 1";
-    $query_run = mysqli_query($link, $query);
+if(isset($_POST["login"])){
+    $email_login = mysqli_real_escape_string($link, trim($_POST['email']));
+    $password = trim($_POST['password']);
+
+    $query_run = mysqli_query($link, "SELECT * FROM login where email = '$email'");
     $usertypes = mysqli_fetch_array($query_run);
 	$count=mysqli_num_rows($query_run);
     $_SESSION['ROLE'] = $usertypes['role'];
     $_SESSION['user'] = $usertypes['username'];
     if($_SESSION['ROLE'] == 1)
     {
-        if($count>0){
-        $row=mysqli_fetch_assoc($query_run);
-        $_SESSION['username'] = $email_login;
-        $_SESSION['UID']=$usertypes['id'];
-        $time=time()+10;
-		$res=mysqli_query($link,"UPDATE register SET last_login='$time' WHERE id=".$_SESSION['UID']);
-        $time_joined = date("Y-m-d H:i:s",strtotime("now"));
-        $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
-        $query_run = mysqli_query($link, $query);
-        header('Location: viewasset.php');
+        if($count > 0){
+            $row=mysqli_fetch_assoc($query_run);
+            $_SESSION['username'] = $email_login;
+            $_SESSION['UID']=$usertypes['id'];
+            $time=time()+10;
+            $res=mysqli_query($link,"UPDATE login SET last_login='$time' WHERE id=".$_SESSION['UID']);
+            $time_joined = date("Y-m-d H:i:s",strtotime("now"));
+            $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
+            $query_run = mysqli_query($link, $query);
+            header('Location: viewasset.php');
+            }
+        }
+        else if($_SESSION['ROLE'] == 2 )
+        {
+            if($count>0){
+                $row=mysqli_fetch_assoc($query_run);
+                $_SESSION['username'] = $email_login;
+                $_SESSION['UID']=$usertypes['id'];
+                $time=time()+10;
+                $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
+                $time_joined = date("Y-m-d H:i:s",strtotime("now"));
+                $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
+                $query_run = mysqli_query($link, $query);
+                header('Location: viewasset.php');
         }
     }
-    else if($_SESSION['ROLE'] == 2 )
+    else if($_SESSION['ROLE'] == 3 )
     {
         if($count>0){
             $row=mysqli_fetch_assoc($query_run);
             $_SESSION['username'] = $email_login;
             $_SESSION['UID']=$usertypes['id'];
             $time=time()+10;
-            $res=mysqli_query($link,"UPDATE register SET  last_login='$time' WHERE id=".$_SESSION['UID']);
+            $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
             $time_joined = date("Y-m-d H:i:s",strtotime("now"));
             $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
             $query_run = mysqli_query($link, $query);
             header('Location: viewasset.php');
     }
-}
-else if($_SESSION['ROLE'] == 3 )
-{
-    if($count>0){
-        $row=mysqli_fetch_assoc($query_run);
-        $_SESSION['username'] = $email_login;
-        $_SESSION['UID']=$usertypes['id'];
-        $time=time()+10;
-        $res=mysqli_query($link,"UPDATE register SET  last_login='$time' WHERE id=".$_SESSION['UID']);
-        $time_joined = date("Y-m-d H:i:s",strtotime("now"));
-        $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
-        $query_run = mysqli_query($link, $query);
-        header('Location: viewasset.php');
-}
-}
-    else
-    {
-        $_SESSION['status'] = "Email / Password is Invalid";
-        header('Location: login.php');
-    }
-}
-
-
-if(isset($_POST['login_btn']))
-{
-$sql ="SELECT * FROM `register`";
-$result = mysqli_query($link, $sql);
-
-        $res=mysqli_query($link,"UPDATE register SET  `role`='2' WHERE `usertype` = 'user'");
-}
-
-if(isset($_POST['login_btn']))
-{
-$sql ="SELECT * FROM `register`";
-$result = mysqli_query($link, $sql);
-
-        $res=mysqli_query($link,"UPDATE register SET  `role`='3' WHERE `usertype` = 'superadmin'");
+        }
+            
 }
 
 

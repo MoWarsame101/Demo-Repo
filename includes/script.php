@@ -50,6 +50,26 @@
   }
 </script>
 
+    <!-- Reset OTP Password -->
+<script>
+    const toggle = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+
+    toggle.addEventListener('click', function(){
+        if(password.type === "password"){
+            password.type = 'text';
+        }else{
+            password.type = 'password';
+        }
+        this.classList.toggle('bi-eye');
+    });
+</script>
+
+
+
+
+
+
 <script>
     	var options = {
         onLoad: function () {
