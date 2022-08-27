@@ -5,31 +5,33 @@ include_once  "includes/navbar.php";
 //Import PHPMailer classes into the global namespace
 //These must be at the top of your script, not inside a function
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-//Load Composer's autoloader
-require 'vendor/autoload.php';
 require 'vendor/phpmailer/phpmailer/src/Exception.php';
 require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require 'vendor/phpmailer/phpmailer/src/SMTP.php';
-$output = '';
-//Create an instance; passing `true` enables exceptions
+
+// Include autoload.php file
+require 'vendor/autoload.php';
+// Create object of PHPMailer class
 $mail = new PHPMailer(true);
-if(isset($_POST['examplemailer'])){
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $subject = $_POST['subject'];
-    $message = $_POST['message'];
-try {
-    //Server settings
+
+$output = '';
+
+if (isset($_POST['examplemailer'])) {
+  $name = $_POST['name'];
+  $email = $_POST['email'];
+  $subject = $_POST['subject'];
+  $message = $_POST['message'];
+
+  try {
     $mail->isSMTP();
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
     // Gmail ID which you want to use as SMTP server
     $mail->Username = 'mowarzamedemo@gmail.com';
     // Gmail Password
-    $mail->Password = 'abc123@@';
+    $mail->Password = 'ibbpbyxjmjdthvlf';
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
 
@@ -52,6 +54,7 @@ try {
               </div>';
   }
 }
+
 ?>
 
 <div class="container">
@@ -62,7 +65,7 @@ try {
             <h3 class="card-title">Contact Us</h3>
           </div>
           <div class="card-body px-4">
-            <form action="examplemailer.php" method="POST">
+            <form action="#" method="POST">
               <div class="form-group">
                 <?= $output; ?>
               </div>
