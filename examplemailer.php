@@ -1,4 +1,7 @@
 <?php
+include_once  "includes/security.php";
+include_once  "includes/header.php";
+include_once  "includes/navbar.php";
 //Import PHPMailer classes into the global namespace
 //These must be at the top of your script, not inside a function
 use PHPMailer\PHPMailer\PHPMailer;
@@ -7,41 +10,91 @@ use PHPMailer\PHPMailer\Exception;
 
 //Load Composer's autoloader
 require 'vendor/autoload.php';
-
+require 'vendor/phpmailer/phpmailer/src/Exception.php';
+require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require 'vendor/phpmailer/phpmailer/src/SMTP.php';
+$output = '';
 //Create an instance; passing `true` enables exceptions
 $mail = new PHPMailer(true);
-
+if(isset($_POST['examplemailer'])){
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $subject = $_POST['subject'];
+    $message = $_POST['message'];
 try {
     //Server settings
-    $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-    $mail->isSMTP();                                            //Send using SMTP
-    $mail->Host       = 'smtp.example.com';                     //Set the SMTP server to send through
-    $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-    $mail->Username   = 'user@example.com';                     //SMTP username
-    $mail->Password   = 'secret';                               //SMTP password
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-    $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    // Gmail ID which you want to use as SMTP server
+    $mail->Username = 'mowarzamedemo@gmail.com';
+    // Gmail Password
+    $mail->Password = 'abc123@@';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
 
-    //Recipients
-    $mail->setFrom('from@example.com', 'Mailer');
-    $mail->addAddress('joe@example.net', 'Joe User');     //Add a recipient
-    $mail->addAddress('ellen@example.com');               //Name is optional
-    $mail->addReplyTo('info@example.com', 'Information');
-    $mail->addCC('cc@example.com');
-    $mail->addBCC('bcc@example.com');
+    // Email ID from which you want to send the email
+    $mail->setFrom('mowarzamedemo@gmail.com');
+    // Recipient Email ID where you want to receive emails
+    $mail->addAddress('mowarzamedemo@gmail.com');
 
-    //Attachments
-    $mail->addAttachment('/var/tmp/file.tar.gz');         //Add attachments
-    $mail->addAttachment('/tmp/image.jpg', 'new.jpg');    //Optional name
-
-    //Content
-    $mail->isHTML(true);                                  //Set email format to HTML
-    $mail->Subject = 'Here is the subject';
-    $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
-    $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+    $mail->isHTML(true);
+    $mail->Subject = 'Form Submission';
+    $mail->Body = "<h3>Name : $name <br>Email : $email <br>Message : $message</h3>";
 
     $mail->send();
-    echo 'Message has been sent';
-} catch (Exception $e) {
-    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+    $output = '<div class="alert alert-success">
+                <h5>Thankyou! for contacting us, Well get back to you soon!</h5>
+              </div>';
+  } catch (Exception $e) {
+    $output = '<div class="alert alert-danger">
+                <h5>' . $e->getMessage() . '</h5>
+              </div>';
+  }
 }
+?>
+
+<div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 mt-3">
+        <div class="card shadow">
+          <div class="card-header bg-dark text-light">
+            <h3 class="card-title">Contact Us</h3>
+          </div>
+          <div class="card-body px-4">
+            <form action="examplemailer.php" method="POST">
+              <div class="form-group">
+                <?= $output; ?>
+              </div>
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="Enter Name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">E-Mail</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Enter E-Mail" required>
+              </div>
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <input type="text" name="subject" id="subject" class="form-control" placeholder="Enter Subject"
+                  required>
+              </div>
+              <div class="form-group">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="5" class="form-control" placeholder="Write Your Message"
+                  required></textarea>
+              </div>
+              <div class="form-group">
+                <input type="submit" name="examplemailer" value="Send" class="btn btn-secondary btn-block" id="sendBtn">
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <?php
+  include_once  "includes/script.php";
+  include_once  "includes/footer.php";
+  ?>
