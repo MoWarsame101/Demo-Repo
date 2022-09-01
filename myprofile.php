@@ -1,7 +1,5 @@
 <?php
 include_once  "includes/security.php";
-include_once  "includes/process.php";
-include_once "includes/db.php";
 include_once  "includes/header.php";
 include_once  "includes/navbar.php";
 if(!isset($_SESSION['username']) || $_SESSION['username'] == ""){
@@ -116,7 +114,7 @@ i, .far {
   <form action="myprofile.php" method="POST" enctype="multipart/form-data">
   <?php 
 
-$checkUser = "SELECT * FROM `register` WHERE `email` = '$user'";
+$checkUser = "SELECT * FROM `login` WHERE `email` = '$user'";
 $result = mysqli_query($link, $checkUser);
 $counUser = mysqli_num_rows($result) > 0;
 if(!$counUser){
@@ -193,80 +191,13 @@ if($counUser){
 ?>
   </div>
   </div>
-  <?php if($_SESSION['ROLE'] == 1){?>
-  <div class="card border-left-success shadow ml-5 col-5">
-  <h5 class="card-header">Add New User</h5>
-  <div class="card-body">
-  <form action="myprofile.php" method="POST" enctype="multipart/form-data">
-  <input type="hidden" name="role" value="1">
-  <div class="form-row">
-    <div class="form-group col-md-6">
-      <label for="description">Username</label>
-      <input type="text" name="username" class="form-control" id="description" placeholder="username">
-    </div>
-    <div class="form-group col-md-6">
-      <label for="serialnumber">First Name</label>
-      <input type="text" name="fname" class="form-control" id="serialno" placeholder="First Name">
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-6">
-      <label for="PO">Last Name</label>
-      <input type="text" name="lname" class="form-control" id="PO" placeholder="Last Name">
-    </div>
-    <div class="form-group col-md-6">
-      <label for="Class">email </label>
-      <input type="text" name="email" class="form-control" id="Class" placeholder="email ">
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-6">
-      <label>Password</label>
-      <input type="password" class="form-control required" name="password" id="password" placeholder="Enter user's password">
-    </div>
-    <div class="form-group col-md-6">
-      <label for="quantity">Confirm Password</label>
-      <input type="password" name="repassword" class="form-control" id="checkPassword" placeholder="Confirm Password" onkeyup='check()'>
-      <p id="alertPassword"></p>
-      <input type="hidden" name="pic" value="https://www.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png" class="form-control">
-    </div>
-  </div>
-  <div class="form-row">
-  <div class="form-group col-md-6">
-      <label for="periods">Select Your Department</label>
-      <?php  populateDD("departments", "SELECT departments FROM `departments` order by departments", 0, "Select departments")
-   ?>
-    </div>
-    <div class="form-group col-md-6">
-      <label for="purchaseCost">User Type</label>
-      <select name="usertype" value="<?php echo $row['usertype'] ?>" id="" placeholder="User Type" class="form-control">
-                                       <option value="superadmin">Super Admin</option>
-                                       <option value="admin">Admin</option>
-                                       <option value="user">User</option>
-                                   </select>
-    </div>
-    </div>
-    <div class="form-row">
-    <div class="form-group col-md-6">
-      <label>Image</label>
-      <input type="file" name="picture" class="form-control">
-
-    </div>
-    </div>
-    <button type="submit" class="btn btn-primary btn-sm rounded" name="register-btn">Add New User</button>
-
-    </form>
-  </div>
+  
 
    
    
 
 
 
-  </div>
-  <?php
-  }
-  ?>
   </div>
   <?php if($_SESSION['ROLE'] == 1){?>
   <div class="row">
@@ -281,7 +212,7 @@ if($counUser){
 
   <table id="datatablesSimple" class="table  " style="width:100%">
   <?php
-                $query = "SELECT * FROM register";
+                $query = "SELECT * FROM login";
                 $query_run = mysqli_query($link, $query);
             ?>
         <thead>

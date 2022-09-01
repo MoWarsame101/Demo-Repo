@@ -48,7 +48,7 @@ include "process.php";
                 <a class="collapse-item" href="demoform">Demo Page</a>
                 <a class="collapse-item" href="upload-form">Upload Multiple Files</a>
                 <a class="collapse-item" href="records-table">Delete Multiple func</a>
-                <a class="collapse-item" href="register-user">Register User</a>
+                <a class="collapse-item" href="register">Register User</a>
                 <a class="collapse-item" href="chat">Chat</a>
                 <?php
                 }else if($_SESSION['ROLE'] == 2){

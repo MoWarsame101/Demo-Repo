@@ -1,3 +1,6 @@
+<?php
+include "includes/process.php";
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,7 +47,7 @@
                                     <div class="text-center">
                                         <h1 class="h4 text-gray-900 mb-4">Welcome Back!</h1>
                                     </div>
-                            <form action="#" method="POST" name="login">
+                            <form action="login.php" method="POST">
                             <div class="form-group row">
                                 <label for="email_address" class="col-md-4 col-form-label text-md-right">E-Mail Address</label>
                                 <div class="col-md-6">
@@ -71,7 +74,7 @@
                             </div>
 
                             <div class="col-md-6 offset-md-4">
-                                <input type="submit" value="Login" name="login" class="btn btn-primary">
+                                <input type="submit" name="login" class="btn btn-primary" value="login">
                                 <a href="recover_psw.php" class="btn btn-link">
                                     Forgot Your Password?
                                 </a>

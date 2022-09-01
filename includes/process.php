@@ -3,7 +3,7 @@ include_once "includes/db.php";
 include_once "includes/functions.php";
 include "timezone.php";
 
-require "Mail/phpmailer/PHPMailerAutoload.php";
+require "vendor/phpmailer/phpmailer/Mail/phpmailer/PHPMailerAutoload.php";
 // Include autoload.php file
 
 
@@ -205,10 +205,21 @@ if(isset($_POST['save_excel_data']))
 if(isset($_POST["register"])){
     $email = $_POST["email"];
     $password = $_POST["password"];
-
+    $repassword = $_POST["repassword"];
+    $department = $_POST['departments'];
+    $usertype = $_POST['usertype'];
+    $username = $_POST["username"];
+    $role = $_POST['role'];
+    $files = $_FILES['picture'];
+    $filename = $files['name'];
+    $filrerror = $files['error'];
+    $filetemp = $files['tmp_name'];
+    $fileext = explode('.', $filename);
+    $filecheck = strtolower(end($fileext));
     $check_query = mysqli_query($link, "SELECT * FROM login where email ='$email'");
     $rowCount = mysqli_num_rows($check_query);
-
+    if($password === $repassword){
+    if($filecheck){
     if(!empty($email) && !empty($password)){
         if($rowCount > 0){
             ?>
@@ -217,9 +228,12 @@ if(isset($_POST["register"])){
             </script>
             <?php
         }else{
+            $destinationfile = '../img/'.$filename;
+            move_uploaded_file($filetemp, $destinationfile);
             $password_hash = password_hash($password, PASSWORD_BCRYPT);
-
-            $result = mysqli_query($link, "INSERT INTO login (email, password, status) VALUES ('$email', '$password_hash', 0)");
+            $repassword_hash = password_hash($repassword, PASSWORD_BCRYPT);
+            $result = mysqli_query($link, "INSERT INTO login (email,username, password,repassword,usertype,role,departments,pic, status) VALUES
+             ('$email', '$username','$repassword_hash','$password_hash', '$usertype','$role','$department','$destinationfile', 0)");
 
             if($result){
                 $otp = rand(100000,999999);
@@ -234,7 +248,7 @@ if(isset($_POST["register"])){
                 $mail->SMTPSecure='tls';
 
                 $mail->Username='mowarzamedemo@gmail.com';
-                $mail->Password='nugzlfuyqhelyzwd';
+                $mail->Password='nkidmmsinyzcxdpu';
 
                 $mail->setFrom('email account', 'OTP Verification');
                 $mail->addAddress($_POST["email"]);
@@ -263,7 +277,13 @@ if(isset($_POST["register"])){
                         }
             }
         }
-    }
+        }
+    } 
+}
+else{
+    echo "Password and confirm password not matched";
+    header("location: register.php");
+}
 }
 
 //Verify OTP
@@ -330,7 +350,7 @@ if(isset($_POST["recover"])){
 
         // h-hotel account
         $mail->Username='mowarzamedemo@gmail.com';
-        $mail->Password='nugzlfuyqhelyzwd';
+        $mail->Password='nkidmmsinyzcxdpu';
 
         // send by h-hotel email
         $mail->setFrom('email', 'Password Reset');
@@ -407,57 +427,65 @@ if(isset($_POST["login"])){
     $email_login = mysqli_real_escape_string($link, trim($_POST['email']));
     $password = trim($_POST['password']);
 
-    $query_run = mysqli_query($link, "SELECT * FROM login where email = '$email'");
+    $query_run = mysqli_query($link, "SELECT * FROM login where email = '$email_login'");
+    $count = mysqli_num_rows($query_run);
     $usertypes = mysqli_fetch_array($query_run);
-	$count=mysqli_num_rows($query_run);
     $_SESSION['ROLE'] = $usertypes['role'];
     $_SESSION['user'] = $usertypes['username'];
-    if($_SESSION['ROLE'] == 1)
-    {
         if($count > 0){
-            $row=mysqli_fetch_assoc($query_run);
-            $_SESSION['username'] = $email_login;
-            $_SESSION['UID']=$usertypes['id'];
-            $time=time()+10;
-            $res=mysqli_query($link,"UPDATE login SET last_login='$time' WHERE id=".$_SESSION['UID']);
-            $time_joined = date("Y-m-d H:i:s",strtotime("now"));
-            $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
-            $query_run = mysqli_query($link, $query);
-            header('Location: viewasset.php');
+            $hashpassword = $usertypes["password"];
+
+            if($usertypes["status"] == 0){
+                    echo "Please verify email account before login.";
+            }else if(password_verify($password, $hashpassword)){
+                if($_SESSION['ROLE'] == 1)
+                {
+                    if($count>0){
+                    $row=mysqli_fetch_assoc($query_run);
+                    $_SESSION['username'] = $email_login;
+                    $_SESSION['UID']=$usertypes['id'];
+                    $time=time()+10;
+                    $res=mysqli_query($link,"UPDATE login SET last_login='$time' WHERE id=".$_SESSION['UID']);
+                    $time_joined = date("Y-m-d H:i:s",strtotime("now"));
+                    $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
+                    $query_run = mysqli_query($link, $query);
+                    header('Location: viewasset.php');
+                    }
+                }
+                else if($_SESSION['ROLE'] == 2 )
+                {
+                    if($count>0){
+                        $row=mysqli_fetch_assoc($query_run);
+                        $_SESSION['username'] = $email_login;
+                        $_SESSION['UID']=$usertypes['id'];
+                        $time=time()+10;
+                        $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
+                        $time_joined = date("Y-m-d H:i:s",strtotime("now"));
+                        $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
+                        $query_run = mysqli_query($link, $query);
+                        header('Location: viewasset.php');
+                }
             }
-        }
-        else if($_SESSION['ROLE'] == 2 )
-        {
-            if($count>0){
-                $row=mysqli_fetch_assoc($query_run);
-                $_SESSION['username'] = $email_login;
-                $_SESSION['UID']=$usertypes['id'];
-                $time=time()+10;
-                $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
-                $time_joined = date("Y-m-d H:i:s",strtotime("now"));
-                $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
-                $query_run = mysqli_query($link, $query);
-                header('Location: viewasset.php');
-        }
-    }
-    else if($_SESSION['ROLE'] == 3 )
-    {
-        if($count>0){
-            $row=mysqli_fetch_assoc($query_run);
-            $_SESSION['username'] = $email_login;
-            $_SESSION['UID']=$usertypes['id'];
-            $time=time()+10;
-            $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
-            $time_joined = date("Y-m-d H:i:s",strtotime("now"));
-            $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
-            $query_run = mysqli_query($link, $query);
-            header('Location: viewasset.php');
-    }
+            else if($_SESSION['ROLE'] == 3 )
+            {
+                if($count>0){
+                    $row=mysqli_fetch_assoc($query_run);
+                    $_SESSION['username'] = $email_login;
+                    $_SESSION['UID']=$usertypes['id'];
+                    $time=time()+10;
+                    $res=mysqli_query($link,"UPDATE login SET  last_login='$time' WHERE id=".$_SESSION['UID']);
+                    $time_joined = date("Y-m-d H:i:s",strtotime("now"));
+                    $query = "INSERT INTO  `activity` (`time_logged`,`username`)VALUES('$time_joined','$email_login')";
+                    $query_run = mysqli_query($link, $query);
+                    header('Location: viewasset.php');
+            }
+            }
+            }else{
+                echo"email or password invalid, please try again.";
+            }
         }
             
 }
-
-
 
 
           
@@ -649,7 +677,7 @@ if(isset($_POST['change-profile']))
     $id = $_POST['edit_id'];
     $edit_pic = $_FILES['edit_picture']['name'];
     
-    $query = "UPDATE `register` SET `pic`='$edit_pic' WHERE `id`='$id'";
+    $query = "UPDATE `login` SET `pic`='$edit_pic' WHERE `id`='$id'";
     
     $query_run = mysqli_query($link, $query);
     if($query_run){

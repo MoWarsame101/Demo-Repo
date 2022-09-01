@@ -2,7 +2,7 @@
 include_once "includes/db.php";
 $uid=$_SESSION['UID'];
 $time=time();
-$res=mysqli_query($link,"SELECT * FROM register");
+$res=mysqli_query($link,"SELECT * FROM login");
 $i=1;
 $html='';
 while($row=mysqli_fetch_assoc($res)){

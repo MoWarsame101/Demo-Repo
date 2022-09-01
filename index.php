@@ -4,7 +4,7 @@ include_once  "includes/header.php";
 include_once  "includes/navbar.php";
 
 $time=time();
-$res=mysqli_query($link,"SELECT * FROM register");
+$res=mysqli_query($link,"SELECT * FROM login");
 $msg='';
 
 $sql = " SELECT SUM(price) AS SUM FROM `registerasset`";
@@ -243,7 +243,7 @@ while($row = mysqli_fetch_assoc($sql_query)){
 </div>
 
 <?php
-                $query = "SELECT * FROM register";
+                $query = "SELECT * FROM login";
                 $query_run = mysqli_query($link, $query);
             ?>
 <div class="row bg-white p-5 mb-5 shadow border-left-success ">
