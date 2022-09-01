@@ -16,3 +16,4 @@
     echo $responses, "\n";
 
 
+?>
